@@ -5,7 +5,9 @@ from somegame.util import load_texture, Vector2D
 class StudentME(Mob):
     def __init__(self, game, position):
         super().__init__(game, position)
-        self.image = load_texture('s_me/main.png')
+        self.main_texture = load_texture('s_me/main.png')
+        self.hit_texture = load_texture('s_me/main.png')    # TODO: actually draw hit texture
+        self.image = self.main_texture
         self.update_rect()
 
     def ai(self, time_interval):

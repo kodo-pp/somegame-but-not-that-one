@@ -8,10 +8,29 @@ class Mob(SpriteBase):
         super().__init__(game=game)
         self.momentum = Vector2D(0.0, 0.0)
         self.position = position
+        self.hit_timeout = 0.0
+        self.control_disabled_for = 0.0
+        self.main_texture = None
+        self.hit_texture = None
+        self.max_hp = 2
+        self.hp = self.max_hp
     
     def update(self, time_interval):
         self.ai(time_interval)
         self.move_by(*(self.momentum * time_interval).to_tuple())
+
+        # Friction
+        self.momentum.stretch(max(0.0, self.momentum.length() - self.friction * time_interval))
+
+        # Update timeouts
+        if self.hit_timeout > 0.0:
+            self.hit_timeout -= time_interval
+        if self.control_disabled_for > 0.0:
+            self.control_disabled_for -= time_interval
+
+        # Update textures
+        if self.hit_timeout <= 0.0:
+            self.image = self.main_texture
         self.update_rect()
 
     @abc.abstractmethod
@@ -23,7 +42,7 @@ class Mob(SpriteBase):
             blocker = self.game.get_position_blocker((x, y), self.hit_radius, self)
             if blocker is not None:
                 vec = Vector2D(x, y) - Vector2D(*blocker.position)
-                vec.stretch(5000.0)
+                vec.stretch(500.0)
                 self.momentum += vec
                 blocker.momentum -= vec
         super().move_to(x, y)
@@ -34,9 +53,47 @@ class Mob(SpriteBase):
         distance_sq = (sprite_position - my_position).length_sq()
         return distance_sq <= (radius + sprite.hit_radius) ** 2
 
+    def disable_control_for(self, time):
+        self.control_disabled_for = max(self.control_disabled_for, time)
+
+    def is_control_enabled(self):
+        return self.control_disabled_for <= 0.0
+
+    def hit_by(self, attacker, vector, force, damage):
+        if not self.is_hittable():
+            return False
+        if vector.length_sq() < 1e-9:
+            vector = get_random_direction()
+        self.inflict_damage(damage)
+        vector = vector.normalized()
+        self.momentum = vector * force
+        self.disable_control_for(self.hit_confusion_time)
+        self.image = self.hit_texture
+        self.hit_timeout = self.hit_grace
+        return True
+
+    def inflict_damage(self, damage):
+        self.hp = max(0, self.hp - damage)
+        if self.hp <= 0:
+            self.die()
+
+    def die(self):
+        self.kill()
+
+    def is_hittable(self):
+        return self.hit_timeout <= 0.0
+
+    def inflict_damage(self, damage):
+        self.hp = max(0, self.hp - damage)
+        if self.hp <= 0:
+            self.die()
+
+
     acceleration = 1000.0
     attack_radius = 0.0
-    friction = 1500.0
+    friction = 200.0
+    hit_confusion_time = 0.15
+    hit_grace = 0.2
     hit_radius = 30.0
     prevent_collisions = True
     speed = 100.0

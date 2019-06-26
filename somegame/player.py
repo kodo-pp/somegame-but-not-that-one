@@ -28,46 +28,8 @@ class Player(Mob):
             self.momentum += direction * self.acceleration
             self.momentum.chomp(self.speed)
 
-        # Movement
-        self.move_by(*(self.momentum * time_interval).to_tuple())
-
-        # Update timeouts
-        if self.hit_timeout > 0.0:
-            self.hit_timeout -= time_interval
-        if self.control_disabled_for > 0.0:
-            self.control_disabled_for -= time_interval
-
-        # Update textures
-        if self.hit_timeout <= 0.0:
-            self.image = self.main_texture
-
-    def is_hittable(self):
-        return self.hit_timeout <= 0.0
-
-    def inflict_damage(self, damage):
-        self.hp = max(0, self.hp - damage)
-        if self.hp <= 0:
-            raise PlayerDied()
-
-    def hit_by(self, attacker, vector, force, damage):
-        if not self.is_hittable():
-            return False
-        if vector.length_sq() < 1e-9:
-            vector = get_random_direction()
-        self.inflict_damage(damage)
-        vector = vector.normalized()
-        self.momentum = vector * force
-        self.disable_control_for(self.hit_confusion_time)
-        self.image = self.hit_texture
-        self.hit_timeout = self.hit_grace
-        logger.info('Player was hit! Remaining HP: {}/{}', self.hp, self.max_hp)
-        return True
-
-    def disable_control_for(self, time):
-        self.control_disabled_for = max(self.control_disabled_for, time)
-
-    def is_control_enabled(self):
-        return self.control_disabled_for <= 0.0
+    def die(self):
+        raise PlayerDied()
 
     @staticmethod
     def get_direction():
@@ -86,6 +48,7 @@ class Player(Mob):
 
     acceleration = 300.0
     collides = False
+    friction = 1500.0
     hit_confusion_time = 0.25
     hit_grace = 0.4
     prevent_collisions = False
