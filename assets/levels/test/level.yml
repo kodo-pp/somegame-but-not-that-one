@@ -1,0 +1,14 @@
+player:
+    position:
+        x: 0.5
+        y: 0.5
+
+entities:
+    - name: student_me
+      position: [0.2, 0.2]
+    - name: student_me
+      position: [0.2, 0.8]
+    - name: student_me
+      position: [0.8, 0.2]
+    - name: student_me
+      position: [0.8, 0.8]

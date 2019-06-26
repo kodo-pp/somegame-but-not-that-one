@@ -1,4 +1,7 @@
+import os
+
 import pygame
+import yaml
 from loguru import logger
 
 from somegame.fps_osd import FpsOSD
@@ -9,6 +12,15 @@ from somegame.util import load_texture
 
 class GameExited(BaseException):
     pass
+
+
+class LevelLoadError(RuntimeError):
+    pass
+
+
+entities = {
+    'student_me': StudentME,
+}
 
 
 class Game(object):
@@ -57,10 +69,33 @@ class Game(object):
 
     def init(self):
         logger.info('Running initialization routines')
-        self.player = Player(game=self, position=self.to_absolute_position(0.5, 0.5))
         self.fps_osd = FpsOSD(game=self)
+        self.load_level('test')
+
+    def load_level(self, level_name):
+        logger.info('Loading level `{}`'.format(level_name))
+        self.player = None
+        self.sprites.empty()
+        try:
+            with open(os.path.join('assets', 'levels', level_name, 'level.yml')) as f:
+                level = yaml.safe_load(f)
+        except Exception as e:
+            raise LevelLoadError('Failed to load level `{}`: {}'.format(level_name, str(e))) from e
+        player_position_info = level['player']['position']
+        self.player = Player(
+            game = self,
+            position = self.to_absolute_position(player_position_info['x'], player_position_info['y']),
+        )
         self.sprites.add(self.player)
-        self.sprites.add(StudentME(game=self, position=self.to_absolute_position(0.3, 0.7)))
+        for ent in level['entities']:
+            name = ent['name']
+            position = self.to_absolute_position(*ent['position'])
+            if name not in entities:
+                raise LevelLoadError('Unknown entity name: `{}`'.format(name))
+            Entity = entities[name]
+
+            self.sprites.add(Entity(game=self, position=position))
+                    
 
     def process_events(self):
         for event in pygame.event.get():
