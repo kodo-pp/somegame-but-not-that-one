@@ -1,7 +1,7 @@
 import pygame
 
 from somegame.mob import Mob
-from somegame.util import get_random_direction, load_texture
+from somegame.util import get_random_direction, load_texture, Vector2D
 
 
 class Player(Mob):
@@ -12,14 +12,29 @@ class Player(Mob):
         self.image = self.main_texture
         self.update_rect()
         self.hit_timeout = 0.0
-        
+        self.momentum = Vector2D(0.0, 0.0)
+        self.control_disabled_for = 0.0
+
     def ai(self, time_interval):
-        dir_x, dir_y = self.get_direction()
-        dx = dir_x * self.speed * time_interval
-        dy = dir_y * self.speed * time_interval
-        self.move_by(dx, dy)
+        # Friction
+        self.momentum.stretch(max(0.0, self.momentum.length() - self.friction * time_interval))
+
+        # Keyboard control
+        if self.is_control_enabled():
+            direction = Vector2D(*self.get_direction())
+            self.momentum += direction * self.acceleration
+            self.momentum.chomp(self.speed)
+
+        # Movement
+        self.move_by(*(self.momentum * time_interval).to_tuple())
+
+        # Update timeouts
         if self.hit_timeout > 0.0:
             self.hit_timeout -= time_interval
+        if self.control_disabled_for > 0.0:
+            self.control_disabled_for -= time_interval
+
+        # Update textures
         if self.hit_timeout <= 0.0:
             self.image = self.main_texture
 
@@ -32,10 +47,17 @@ class Player(Mob):
         if vector.length_sq() < 1e-9:
             vector = get_random_direction()
         vector = vector.normalized()
-        self.move_by(*(vector * force).to_tuple())
+        self.momentum = vector * force
+        self.disable_control_for(self.hit_confusion_time)
         self.image = self.hit_texture
         self.hit_timeout = self.hit_grace
         return True
+
+    def disable_control_for(self, time):
+        self.control_disabled_for = max(self.control_disabled_for, time)
+
+    def is_control_enabled(self):
+        return self.control_disabled_for <= 0.0
 
     @staticmethod
     def get_direction():
@@ -52,4 +74,8 @@ class Player(Mob):
             dir_y += 1
         return dir_x, dir_y
 
-    hit_grace = 1.0
+    hit_grace = 0.45
+    hit_confusion_time = 0.35
+    acceleration = 300.0
+    friction = 1500.0
+    speed = 300.0

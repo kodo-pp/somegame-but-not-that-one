@@ -6,5 +6,5 @@ setup(
     author = 'kodopp',
     version = '0.0.0',
     packages = ['somegame'],
-    install_requires = ['pygame'],
+    install_requires = ['pygame', 'loguru'],
 )

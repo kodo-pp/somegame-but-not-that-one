@@ -20,9 +20,9 @@ class Mob(SpriteBase):
         my_position = Vector2D(*self.position)
         sprite_position = Vector2D(*sprite.position)
         distance_sq = (sprite_position - my_position).length_sq()
-        return distance_sq <= (radius + sprite.hit_radius)
+        return distance_sq <= (radius + sprite.hit_radius) ** 2
 
-    hit_radius = 40.0
+    hit_radius = 30.0
     speed = 100.0
     attack_radius = 0.0
 

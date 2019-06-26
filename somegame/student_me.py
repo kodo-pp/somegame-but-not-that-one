@@ -25,6 +25,6 @@ class StudentME(Mob):
         if self.collides_with(self.game.player, radius=self.attack_radius):
             self.game.player.hit_by(self, vector=direction_vector, force=self.attack_knockback)
 
-    speed = 80.0
-    attack_radius = 60.0
-    attack_knockback = 70.0
+    speed = 100.0
+    attack_radius = 20.0
+    attack_knockback = 600.0
