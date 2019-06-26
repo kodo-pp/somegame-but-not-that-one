@@ -6,6 +6,7 @@ from loguru import logger
 
 from somegame.control_exceptions import *
 from somegame.fps_osd import FpsOSD
+from somegame.health_osd import HealthOSD
 from somegame.player import Player
 from somegame.student_me import StudentME
 from somegame.util import load_texture, Vector2D
@@ -31,6 +32,7 @@ class Game(object):
         'time_counter',
         'average_fps',
         'fps_osd',
+        'health_osd',
     ]
 
     def __init__(self):
@@ -88,6 +90,7 @@ class Game(object):
 
     def load_level(self, level_name):
         logger.info('Loading level `{}`'.format(level_name))
+        self.health_osd = None
         self.player = None
         self.sprites.empty()
         try:
@@ -109,6 +112,8 @@ class Game(object):
                 self.sprites.add(Entity(game=self, position=position))
         except Exception as e:
             raise LevelLoadError('Failed to load level `{}`: {}'.format(level_name, str(e))) from e
+        self.health_osd = HealthOSD(game=self)
+        self.health_osd.draw(self.surface)
 
     def process_events(self):
         for event in pygame.event.get():
@@ -117,11 +122,14 @@ class Game(object):
 
     def update(self, time_interval):
         self.sprites.update(time_interval)
+        self.fps_osd.update()
+        self.health_osd.update()
 
     def draw(self):
         self.surface.fill(color=(0, 0, 0))
         self.sprites.draw(self.surface)
         self.fps_osd.draw(self.surface)
+        self.health_osd.draw(self.surface)
         pygame.display.flip()
 
     def to_absolute_position(self, rx, ry):

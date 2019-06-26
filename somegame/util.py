@@ -3,6 +3,7 @@ import os
 import random as rd
 
 import pygame
+from loguru import logger
 
 
 class Vector2D(object):
@@ -128,8 +129,19 @@ class SpriteBase(pygame.sprite.Sprite):
     collides = True
 
 
+# XXX: Add a lock here when (if) multithreading will be used
+_texture_cache = {}
+
 def load_texture(name):
-    return pygame.image.load(os.path.join('assets', 'textures', name))
+    logger.info('Loading texture `{}`', name)
+    global _texture_cache
+    if name in _texture_cache:
+        logger.info('Texture `{}` - cached', name)
+        return _texture_cache[name]
+    texture = pygame.image.load(os.path.join('assets', 'textures', name))
+    _texture_cache[name] = texture
+    logger.info('Texture `{}` - loaded from file', name)
+    return texture
 
 
 def get_random_direction():
