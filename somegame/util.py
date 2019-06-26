@@ -42,6 +42,9 @@ class Vector2D(object):
         self.y /= k
         return self
 
+    def __neg__(self):
+        return self * (-1.0)
+
     def to_tuple(self):
         """ Convert vector to tuple """
         return (self.x, self.y)
@@ -121,6 +124,8 @@ class SpriteBase(pygame.sprite.Sprite):
         if y < 0:
             y = 0
         self.position = x, y
+
+    collides = True
 
 
 def load_texture(name):

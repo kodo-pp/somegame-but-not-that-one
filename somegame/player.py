@@ -12,7 +12,6 @@ class Player(Mob):
         self.image = self.main_texture
         self.update_rect()
         self.hit_timeout = 0.0
-        self.momentum = Vector2D(0.0, 0.0)
         self.control_disabled_for = 0.0
 
     def ai(self, time_interval):
@@ -74,8 +73,9 @@ class Player(Mob):
             dir_y += 1
         return dir_x, dir_y
 
-    hit_grace = 0.45
-    hit_confusion_time = 0.35
     acceleration = 300.0
-    friction = 1500.0
-    speed = 300.0
+    collides = False
+    hit_confusion_time = 0.25
+    hit_grace = 0.4
+    prevent_collisions = False
+    speed = 200.0
