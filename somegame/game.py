@@ -4,14 +4,11 @@ import pygame
 import yaml
 from loguru import logger
 
+from somegame.control_exceptions import *
 from somegame.fps_osd import FpsOSD
 from somegame.player import Player
 from somegame.student_me import StudentME
 from somegame.util import load_texture, Vector2D
-
-
-class GameExited(BaseException):
-    pass
 
 
 class LevelLoadError(RuntimeError):
@@ -51,18 +48,22 @@ class Game(object):
         self.init()
         logger.info('Entering main loop')
         try:
-            while True:
-                millisecs = self.clock.tick(self.fps)
-                secs = millisecs / 1000.0
-                self.draw()
-                self.update(secs)
-                self.process_events()
-                self.frame_counter += 1
-                self.time_counter += secs
-                if self.frame_counter >= 10:
-                    self.average_fps = self.frame_counter / self.time_counter
-                    self.frame_counter = 0
-                    self.time_counter = 0
+            try:
+                while True:
+                    millisecs = self.clock.tick(self.fps)
+                    secs = millisecs / 1000.0
+                    self.draw()
+                    self.update(secs)
+                    self.process_events()
+                    self.frame_counter += 1
+                    self.time_counter += secs
+                    if self.frame_counter >= 10:
+                        self.average_fps = self.frame_counter / self.time_counter
+                        self.frame_counter = 0
+                        self.time_counter = 0
+            except PlayerDied as e:
+                logger.info('Player died')
+                raise GameExited() from e
         except GameExited:
             logger.info('Game exited')
             return
