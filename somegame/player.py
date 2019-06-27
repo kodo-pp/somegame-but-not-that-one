@@ -26,7 +26,7 @@ class Player(Mob):
 
     def ai(self, time_interval):
         # Friction
-        self.momentum.stretch(max(0.0, self.momentum.length() - self.trait_friction * time_interval))
+        # self.momentum.stretch(max(0.0, self.momentum.length() - self.trait_friction * time_interval))
 
         # Keyboard control
         if self.is_control_enabled():

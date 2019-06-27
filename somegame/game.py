@@ -7,6 +7,7 @@ from loguru import logger
 from somegame.control_exceptions import *
 from somegame.fps_osd import FpsOSD
 from somegame.health_osd import HealthOSD
+from somegame.level_transition_overlay import LevelTransitionOverlay
 from somegame.mob import Mob
 from somegame.player import Player
 from somegame.student_me import StudentME
@@ -24,13 +25,17 @@ entities = {
 
 class Game(object):
     __slots__ = [
-        'ai_mobs',
         'average_fps',
         'clock',
+        'enemies',
         'fps',
         'fps_osd',
         'frame_counter',
         'health_osd',
+        'is_showing_level_overlay',
+        'level_name',
+        'level_transition_overlay',
+        'mobs',
         'player',
         'sprite_removal_queue',
         'sprites',
@@ -40,12 +45,15 @@ class Game(object):
 
     def __init__(self):
         self.sprites = pygame.sprite.Group()
-        self.ai_mobs = pygame.sprite.Group()
+        self.mobs = pygame.sprite.Group()
+        self.enemies = pygame.sprite.Group()
         self.fps = 60
         self.frame_counter = 0
         self.time_counter = 0.0
         self.average_fps = None
         self.sprite_removal_queue = []
+        self.is_showing_level_overlay = False
+        self.level_name = None
 
     def run(self):
         logger.info('Initializing Pygame-related objects')
@@ -68,6 +76,8 @@ class Game(object):
                         self.average_fps = self.frame_counter / self.time_counter
                         self.frame_counter = 0
                         self.time_counter = 0
+                    if not self.is_showing_level_overlay and self.should_switch_level():
+                        self.load_level(self.get_next_level_name())
             except PlayerDied as e:
                 logger.info('Player died')
                 raise GameExited() from e
@@ -78,7 +88,7 @@ class Game(object):
     def init(self):
         logger.info('Running initialization routines')
         self.fps_osd = FpsOSD(game=self)
-        self.load_level('test')
+        self.load_level('0')
 
     def get_position_blocker(self, position, radius, mob):
         point = Vector2D(*position)
@@ -97,20 +107,48 @@ class Game(object):
         logger.debug('Adding sprite of class `{}` with hexid {}', sprite.__class__.__name__, hex(id(sprite)))
         self.sprites.add(sprite)
         if isinstance(sprite, Mob):
-            self.ai_mobs.add(sprite)
+            self.mobs.add(sprite)
 
     def enqueue_sprite_removal(self, sprite):
         self.sprite_removal_queue.append(sprite)
+
+    def get_next_level_name(self):
+        return str(int(self.level_name) + 1)
+
+    @staticmethod
+    def get_level_entry_overlay(level_name):
+        try:
+            return load_texture('overlay.png', root=os.path.join('assets', 'levels', level_name))
+        except Exception as e:
+            raise LevelLoadError(
+                'Failed to load entry overlay image for level `{}`: {}'.format(level_name, str(e))
+            ) from e
+
+    @staticmethod
+    def read_level(level_name):
+        try:
+            with open(os.path.join('assets', 'levels', level_name, 'level.yml')) as f:
+                return yaml.safe_load(f)
+        except Exception as e:
+            raise LevelLoadError('Failed to read level `{}`: {}'.format(level_name, str(e))) from e
+
+    def level_transition_finished(self):
+        self.is_showing_level_overlay = False
+        self.level_transition_overlay = None
+
+    def should_switch_level(self):
+        return len(self.enemies.sprites()) == 0
 
     def load_level(self, level_name):
         logger.info('Loading level `{}`'.format(level_name))
         self.health_osd = None
         self.player = None
         self.sprites.empty()
-        self.ai_mobs.empty()
+        self.mobs.empty()
+        self.enemies.empty()
+        self.level_name = level_name
         try:
-            with open(os.path.join('assets', 'levels', level_name, 'level.yml')) as f:
-                level = yaml.safe_load(f)
+            level = self.read_level(level_name)
             player_position_info = level['player']['position']
             self.player = Player(
                 game = self,
@@ -124,13 +162,20 @@ class Game(object):
                     raise LevelLoadError('Unknown entity name: `{}`'.format(name))
                 Entity = entities[name]
 
-                ent = Entity(game=self, position=position)
-                self.sprites.add(ent)
-                self.ai_mobs.add(ent)
+                entity = Entity(game=self, position=position)
+                if ent['is_enemy']:
+                    self.enemies.add(entity)
+                self.sprites.add(entity)
+                self.mobs.add(entity)
+            self.is_showing_level_overlay = True
+            self.level_transition_overlay = LevelTransitionOverlay(
+                game = self,
+                image = self.get_level_entry_overlay(level_name),
+            )
+            self.level_transition_overlay.update(0.0)
+            self.health_osd = HealthOSD(game=self)
         except Exception as e:
             raise LevelLoadError('Failed to load level `{}`: {}'.format(level_name, str(e))) from e
-        self.health_osd = HealthOSD(game=self)
-        self.health_osd.draw(self.surface)
 
     def process_events(self):
         for event in pygame.event.get():
@@ -138,19 +183,25 @@ class Game(object):
                 raise GameExited()
 
     def update(self, time_interval):
-        self.sprites.update(time_interval)
-        for i in self.sprite_removal_queue:
-            logger.debug('Removing sprite of class `{}` with hexid {}', i.__class__.__name__, hex(id(i)))
-            i.kill()
-        self.sprite_removal_queue = []
-        self.fps_osd.update()
-        self.health_osd.update()
+        if self.is_showing_level_overlay:
+            self.level_transition_overlay.update(time_interval)
+        else:
+            self.sprites.update(time_interval)
+            for i in self.sprite_removal_queue:
+                logger.debug('Removing sprite of class `{}` with hexid {}', i.__class__.__name__, hex(id(i)))
+                i.kill()
+            self.sprite_removal_queue = []
+            self.fps_osd.update()
+            self.health_osd.update()
 
     def draw(self):
         self.surface.fill(color=(0, 0, 0))
-        self.sprites.draw(self.surface)
-        self.fps_osd.draw(self.surface)
-        self.health_osd.draw(self.surface)
+        if self.is_showing_level_overlay:
+            self.surface.blit(self.level_transition_overlay.image, (0, 0))
+        else:
+            self.sprites.draw(self.surface)
+            self.fps_osd.draw(self.surface)
+            self.health_osd.draw(self.surface)
         pygame.display.flip()
 
     def to_absolute_position(self, rx, ry):

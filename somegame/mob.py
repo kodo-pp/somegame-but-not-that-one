@@ -79,9 +79,6 @@ class Mob(SpriteBase):
         if self.hp <= 0:
             self.die()
 
-    def die(self):
-        self.game.enqueue_sprite_removal(self)
-
     def is_hittable(self):
         return self.hit_timeout <= 0.0 and self.trait_is_hittable
 

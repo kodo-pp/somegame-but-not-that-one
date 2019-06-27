@@ -6,9 +6,16 @@ player:
 entities:
     - name: student_me
       position: [0.2, 0.2]
+      is_enemy: true
+
     - name: student_me
       position: [0.2, 0.8]
+      is_enemy: true
+
     - name: student_me
       position: [0.8, 0.2]
+      is_enemy: true
+
     - name: student_me
       position: [0.8, 0.8]
+      is_enemy: true

@@ -13,7 +13,7 @@ class Bullet(Mob):
 
     def ai(self, time_interval):
         self.move_by(*(self.direction * self.trait_speed * time_interval).to_tuple())
-        for mob in self.game.ai_mobs:
+        for mob in self.game.mobs:
             if mob is self:
                 continue
             if self.collides_with(sprite=mob, radius=self.trait_attack_radius):

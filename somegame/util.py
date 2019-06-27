@@ -130,6 +130,9 @@ class SpriteBase(pygame.sprite.Sprite):
     def is_on_screen(self):
         return self.game.surface.get_rect().colliderect(self.rect)
 
+    def die(self):
+        self.game.enqueue_sprite_removal(self)
+
     trait_bounds_checked = True
     trait_collides = True
 
@@ -137,14 +140,14 @@ class SpriteBase(pygame.sprite.Sprite):
 # XXX: Add a lock here when (if) multithreading will be used
 _texture_cache = {}
 
-def load_texture(name):
+def load_texture(name, root=os.path.join('assets', 'textures')):
     logger.debug('Loading texture `{}`', name)
     global _texture_cache
-    if name in _texture_cache:
+    if (root, name) in _texture_cache:
         logger.debug('Texture `{}` - cached', name)
-        return _texture_cache[name]
-    texture = pygame.image.load(os.path.join('assets', 'textures', name))
-    _texture_cache[name] = texture
+        return _texture_cache[(root, name)]
+    texture = pygame.image.load(os.path.join(root, name))
+    _texture_cache[(root, name)] = texture
     logger.info('Texture `{}` - loaded from file', name)
     return texture
 
