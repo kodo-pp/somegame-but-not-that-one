@@ -17,10 +17,12 @@ class Mob(SpriteBase):
     
     def update(self, time_interval):
         self.ai(time_interval)
-        self.move_by(*(self.momentum * time_interval).to_tuple())
 
-        # Friction
-        self.momentum.stretch(max(0.0, self.momentum.length() - self.friction * time_interval))
+        if self.trait_physics_enabled:
+            self.move_by(*(self.momentum * time_interval).to_tuple())
+    
+            # Friction
+            self.momentum.stretch(max(0.0, self.momentum.length() - self.trait_friction * time_interval))
 
         # Update timeouts
         if self.hit_timeout > 0.0:
@@ -38,8 +40,8 @@ class Mob(SpriteBase):
         pass
 
     def move_to(self, x, y):
-        if self.prevent_collisions:
-            blocker = self.game.get_position_blocker((x, y), self.hit_radius, self)
+        if self.trait_prevent_collisions and self.trait_physics_enabled:
+            blocker = self.game.get_position_blocker((x, y), self.trait_hit_radius, self)
             if blocker is not None:
                 vec = Vector2D(x, y) - Vector2D(*blocker.position)
                 vec.stretch(500.0)
@@ -51,7 +53,7 @@ class Mob(SpriteBase):
         my_position = Vector2D(*self.position)
         sprite_position = Vector2D(*sprite.position)
         distance_sq = (sprite_position - my_position).length_sq()
-        return distance_sq <= (radius + sprite.hit_radius) ** 2
+        return distance_sq <= (radius + sprite.trait_hit_radius) ** 2
 
     def disable_control_for(self, time):
         self.control_disabled_for = max(self.control_disabled_for, time)
@@ -67,9 +69,9 @@ class Mob(SpriteBase):
         self.inflict_damage(damage)
         vector = vector.normalized()
         self.momentum = vector * force
-        self.disable_control_for(self.hit_confusion_time)
+        self.disable_control_for(self.trait_hit_confusion_time)
         self.image = self.hit_texture
-        self.hit_timeout = self.hit_grace
+        self.hit_timeout = self.trait_hit_grace
         return True
 
     def inflict_damage(self, damage):
@@ -78,22 +80,18 @@ class Mob(SpriteBase):
             self.die()
 
     def die(self):
-        self.kill()
+        self.game.enqueue_sprite_removal(self)
 
     def is_hittable(self):
-        return self.hit_timeout <= 0.0
+        return self.hit_timeout <= 0.0 and self.trait_is_hittable
 
-    def inflict_damage(self, damage):
-        self.hp = max(0, self.hp - damage)
-        if self.hp <= 0:
-            self.die()
-
-
-    acceleration = 1000.0
-    attack_radius = 0.0
-    friction = 200.0
-    hit_confusion_time = 0.15
-    hit_grace = 0.2
-    hit_radius = 30.0
-    prevent_collisions = True
-    speed = 100.0
+    trait_acceleration = 1000.0
+    trait_attack_radius = 0.0
+    trait_friction = 200.0
+    trait_hit_confusion_time = 0.15
+    trait_hit_grace = 0.2
+    trait_hit_radius = 30.0
+    trait_is_hittable = True
+    trait_physics_enabled = True
+    trait_prevent_collisions = True
+    trait_speed = 100.0

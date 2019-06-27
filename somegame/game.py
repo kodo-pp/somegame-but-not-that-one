@@ -7,6 +7,7 @@ from loguru import logger
 from somegame.control_exceptions import *
 from somegame.fps_osd import FpsOSD
 from somegame.health_osd import HealthOSD
+from somegame.mob import Mob
 from somegame.player import Player
 from somegame.student_me import StudentME
 from somegame.util import load_texture, Vector2D
@@ -23,24 +24,28 @@ entities = {
 
 class Game(object):
     __slots__ = [
-        'sprites',
-        'surface',
+        'ai_mobs',
+        'average_fps',
         'clock',
         'fps',
-        'player',
-        'frame_counter',
-        'time_counter',
-        'average_fps',
         'fps_osd',
+        'frame_counter',
         'health_osd',
+        'player',
+        'sprite_removal_queue',
+        'sprites',
+        'surface',
+        'time_counter',
     ]
 
     def __init__(self):
         self.sprites = pygame.sprite.Group()
+        self.ai_mobs = pygame.sprite.Group()
         self.fps = 60
         self.frame_counter = 0
         self.time_counter = 0.0
         self.average_fps = None
+        self.sprite_removal_queue = []
 
     def run(self):
         logger.info('Initializing Pygame-related objects')
@@ -80,19 +85,29 @@ class Game(object):
         for sprite in self.sprites:
             if sprite is mob:
                 continue
-            if not sprite.collides:
+            if not sprite.trait_collides:
                 continue
             sprite_point = Vector2D(*sprite.position)
             distance_sq = (sprite_point - point).length_sq()
-            if distance_sq <= (radius + sprite.hit_radius)**2:
+            if distance_sq <= (radius + sprite.trait_hit_radius)**2:
                 return sprite
         return None
+
+    def add_sprite(self, sprite):
+        logger.debug('Adding sprite of class `{}` with hexid {}', sprite.__class__.__name__, hex(id(sprite)))
+        self.sprites.add(sprite)
+        if isinstance(sprite, Mob):
+            self.ai_mobs.add(sprite)
+
+    def enqueue_sprite_removal(self, sprite):
+        self.sprite_removal_queue.append(sprite)
 
     def load_level(self, level_name):
         logger.info('Loading level `{}`'.format(level_name))
         self.health_osd = None
         self.player = None
         self.sprites.empty()
+        self.ai_mobs.empty()
         try:
             with open(os.path.join('assets', 'levels', level_name, 'level.yml')) as f:
                 level = yaml.safe_load(f)
@@ -109,7 +124,9 @@ class Game(object):
                     raise LevelLoadError('Unknown entity name: `{}`'.format(name))
                 Entity = entities[name]
 
-                self.sprites.add(Entity(game=self, position=position))
+                ent = Entity(game=self, position=position)
+                self.sprites.add(ent)
+                self.ai_mobs.add(ent)
         except Exception as e:
             raise LevelLoadError('Failed to load level `{}`: {}'.format(level_name, str(e))) from e
         self.health_osd = HealthOSD(game=self)
@@ -122,6 +139,10 @@ class Game(object):
 
     def update(self, time_interval):
         self.sprites.update(time_interval)
+        for i in self.sprite_removal_queue:
+            logger.debug('Removing sprite of class `{}` with hexid {}', i.__class__.__name__, hex(id(i)))
+            i.kill()
+        self.sprite_removal_queue = []
         self.fps_osd.update()
         self.health_osd.update()
 

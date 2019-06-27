@@ -116,27 +116,32 @@ class SpriteBase(pygame.sprite.Sprite):
 
     def move_to(self, x, y):
         width, height = self.game.surface.get_size()
-        if x >= width:
-            x = width
-        if y >= height:
-            y = height
-        if x < 0:
-            x = 0
-        if y < 0:
-            y = 0
+        if self.trait_bounds_checked:
+            if x >= width:
+                x = width
+            if y >= height:
+                y = height
+            if x < 0:
+                x = 0
+            if y < 0:
+                y = 0
         self.position = x, y
 
-    collides = True
+    def is_on_screen(self):
+        return self.game.surface.get_rect().colliderect(self.rect)
+
+    trait_bounds_checked = True
+    trait_collides = True
 
 
 # XXX: Add a lock here when (if) multithreading will be used
 _texture_cache = {}
 
 def load_texture(name):
-    logger.info('Loading texture `{}`', name)
+    logger.debug('Loading texture `{}`', name)
     global _texture_cache
     if name in _texture_cache:
-        logger.info('Texture `{}` - cached', name)
+        logger.debug('Texture `{}` - cached', name)
         return _texture_cache[name]
     texture = pygame.image.load(os.path.join('assets', 'textures', name))
     _texture_cache[name] = texture
