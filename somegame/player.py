@@ -71,6 +71,9 @@ class Player(Mob):
             dir_y -= 1
         if pressed_keys[pygame.K_DOWN]:
             dir_y += 1
+        if dir_x * dir_y != 0:
+            # Disallow diagonal shots
+            return dir_x, 0
         return dir_x, dir_y
 
     trait_acceleration = 8000.0
