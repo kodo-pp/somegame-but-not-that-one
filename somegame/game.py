@@ -9,12 +9,13 @@ from somegame.control_exceptions import *
 from somegame.deadline import Deadline
 from somegame.fps_osd import FpsOSD
 from somegame.health_osd import HealthOSD
+from somegame.ivr import IVR
 from somegame.level_transition_overlay import LevelTransitionOverlay
 from somegame.mob import Mob
+from somegame.not_a_flower import NotAFlower
 from somegame.player import Player
 from somegame.student_me import StudentME
 from somegame.util import load_texture, Vector2D, probability_choose
-from somegame.not_a_flower import NotAFlower
 
 
 class LevelLoadError(RuntimeError):
@@ -25,6 +26,7 @@ entities = {
     'student_me': StudentME,
     'deadline': Deadline,
     'not_a_flower': NotAFlower,
+    'ivr': IVR,
 }
 
 
@@ -125,11 +127,13 @@ class Game(object):
                 return sprite
         return None
 
-    def add_sprite(self, sprite):
+    def add_sprite(self, sprite, enemy=False):
         logger.debug('Adding sprite of class `{}` with hexid {}', sprite.__class__.__name__, hex(id(sprite)))
         self.sprites.add(sprite)
         if isinstance(sprite, Mob):
             self.mobs.add(sprite)
+        if enemy:
+            self.enemies.add(sprite)
 
     def enqueue_sprite_removal(self, sprite):
         self.sprite_removal_queue.append(sprite)

@@ -1,0 +1,17 @@
+player:
+    position:
+        x: 0.5
+        y: 0.8
+
+entities:
+    - name: ivr
+      position: [0.5, 0.3]
+      is_enemy: true
+
+    - name: deadline
+      position: [0.8, 0.2]
+      is_enemy: true
+
+    - name: student_me
+      position: [0.2, 0.2]
+      is_enemy: true

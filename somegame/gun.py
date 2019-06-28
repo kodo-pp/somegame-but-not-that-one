@@ -54,10 +54,11 @@ class Gun(Weapon):
         self.cooldown_period = cooldown_period
         self.BulletClass = BulletClass
 
-    def shoot(self, direction, cooldown=True):
+    def shoot(self, direction, cooldown=True, force_position=None):
         if self.is_on_cooldown():
             return
-        position = self.holder.position
+        position = self.holder.position if force_position is None else force_position
+
         # TODO: holder
         self.game.add_sprite(self.BulletClass(game=self.game, position=position, direction=direction))
         if cooldown:
