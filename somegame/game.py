@@ -40,10 +40,12 @@ class Game(object):
     __slots__ = [
         'average_fps',
         'clock',
+        'death_overlay_image',
         'enemies',
         'fps',
         'fps_osd',
         'frame_counter',
+        'has_player_died',
         'health_osd',
         'is_showing_level_overlay',
         'level_name',
@@ -68,6 +70,7 @@ class Game(object):
         self.is_showing_level_overlay = False
         self.level_name = None
         self.player = None
+        self.has_player_died = False
 
     def run(self):
         logger.info('Initializing Pygame-related objects')
@@ -77,8 +80,8 @@ class Game(object):
         self.init()
         logger.info('Entering main loop')
         try:
-            try:
-                while True:
+            while True:
+                try:
                     millisecs = self.clock.tick(self.fps)
                     secs = millisecs / 1000.0
                     self.draw()
@@ -92,9 +95,14 @@ class Game(object):
                         self.time_counter = 0
                     if not self.is_showing_level_overlay and self.should_switch_level():
                         self.load_level(self.get_next_level_name(), reward=self.get_random_powerup())
-            except PlayerDied as e:
-                logger.info('Player died')
-                raise GameExited() from e
+                except PlayerDied as e:
+                    logger.info('Player died')
+                    self.fps = 5
+                    self.has_player_died = True
+                    self.death_overlay_image = self.surface.copy()
+                    texture = load_texture('death_screen.png', root='assets/overlays').convert(24)
+                    texture.set_alpha(200)
+                    self.death_overlay_image.blit(texture, (0, 0))
         except GameExited:
             logger.info('Game exited')
             return
@@ -203,7 +211,7 @@ class Game(object):
     def update(self, time_interval):
         if self.is_showing_level_overlay:
             self.level_transition_overlay.update(time_interval)
-        else:
+        elif not self.has_player_died:
             self.sprites.update(time_interval)
             for i in self.sprite_removal_queue:
                 logger.debug('Removing sprite of class `{}` with hexid {}', i.__class__.__name__, hex(id(i)))
@@ -216,6 +224,8 @@ class Game(object):
         self.surface.fill(color=(0, 0, 0))
         if self.is_showing_level_overlay:
             self.surface.blit(self.level_transition_overlay.image, (0, 0))
+        elif self.has_player_died:
+            self.surface.blit(self.death_overlay_image, (0, 0))
         else:
             self.sprites.draw(self.surface)
             self.fps_osd.draw(self.surface)
