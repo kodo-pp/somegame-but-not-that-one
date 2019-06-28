@@ -14,6 +14,7 @@ from somegame.mob import Mob
 from somegame.player import Player
 from somegame.student_me import StudentME
 from somegame.util import load_texture, Vector2D, probability_choose
+from somegame.not_a_flower import NotAFlower
 
 
 class LevelLoadError(RuntimeError):
@@ -23,6 +24,7 @@ class LevelLoadError(RuntimeError):
 entities = {
     'student_me': StudentME,
     'deadline': Deadline,
+    'not_a_flower': NotAFlower,
 }
 
 

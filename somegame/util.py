@@ -130,6 +130,16 @@ class SpriteBase(pygame.sprite.Sprite):
                 y = 0
         self.position = x, y
 
+    def is_on_edge(self, edge):
+        x, y = self.position
+        width, height = self.game.surface.get_size()
+        return {
+            'left':   x <= 0,
+            'right':  x >= width - 1,
+            'top':    y <= 0,
+            'bottom': y >= height - 1,
+        }[edge]
+
     def is_on_screen(self):
         return self.game.surface.get_rect().colliderect(self.rect)
 

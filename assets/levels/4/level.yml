@@ -1,0 +1,21 @@
+player:
+    position:
+        x: 0.5
+        y: 0.5
+
+entities:
+    - name: not_a_flower
+      position: [0.1, 0.1]
+      is_enemy: true
+
+    - name: not_a_flower
+      position: [0.1, 0.9]
+      is_enemy: true
+
+    - name: not_a_flower
+      position: [0.9, 0.1]
+      is_enemy: true
+
+    - name: not_a_flower
+      position: [0.9, 0.9]
+      is_enemy: true
