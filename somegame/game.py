@@ -56,6 +56,7 @@ class Game(object):
         self.sprite_removal_queue = []
         self.is_showing_level_overlay = False
         self.level_name = None
+        self.player = None
 
     def run(self):
         logger.info('Initializing Pygame-related objects')
@@ -144,18 +145,20 @@ class Game(object):
     def load_level(self, level_name):
         logger.info('Loading level `{}`'.format(level_name))
         self.health_osd = None
-        self.player = None
         self.sprites.empty()
         self.mobs.empty()
         self.enemies.empty()
+        if self.player is None:
+            self.player = Player(game=self, position=self.surface.get_rect().center)
         self.level_name = level_name
         try:
             level = self.read_level(level_name)
             player_position_info = level['player']['position']
-            self.player = Player(
-                game = self,
-                position = self.to_absolute_position(player_position_info['x'], player_position_info['y']),
-            )
+            #self.player = Player(
+            #    game = self,
+            #    position = self.to_absolute_position(player_position_info['x'], player_position_info['y']),
+            #)
+            self.player.position = self.to_absolute_position(player_position_info['x'], player_position_info['y'])
             self.add_sprite(self.player)
             for ent in level['entities']:
                 name = ent['name']
