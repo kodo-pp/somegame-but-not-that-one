@@ -5,6 +5,7 @@ import yaml
 from loguru import logger
 
 from somegame.control_exceptions import *
+from somegame.deadline import Deadline
 from somegame.fps_osd import FpsOSD
 from somegame.health_osd import HealthOSD
 from somegame.level_transition_overlay import LevelTransitionOverlay
@@ -20,6 +21,7 @@ class LevelLoadError(RuntimeError):
 
 entities = {
     'student_me': StudentME,
+    'deadline': Deadline,
 }
 
 
@@ -88,7 +90,7 @@ class Game(object):
     def init(self):
         logger.info('Running initialization routines')
         self.fps_osd = FpsOSD(game=self)
-        self.load_level('0')
+        self.load_level(os.getenv('SOMEGAME_START_LEVEL', '0'))
 
     def get_position_blocker(self, position, radius, mob):
         point = Vector2D(*position)
@@ -154,7 +156,7 @@ class Game(object):
                 game = self,
                 position = self.to_absolute_position(player_position_info['x'], player_position_info['y']),
             )
-            self.sprites.add(self.player)
+            self.add_sprite(self.player)
             for ent in level['entities']:
                 name = ent['name']
                 position = self.to_absolute_position(*ent['position'])
@@ -165,8 +167,7 @@ class Game(object):
                 entity = Entity(game=self, position=position)
                 if ent['is_enemy']:
                     self.enemies.add(entity)
-                self.sprites.add(entity)
-                self.mobs.add(entity)
+                self.add_sprite(entity)
             self.is_showing_level_overlay = True
             self.level_transition_overlay = LevelTransitionOverlay(
                 game = self,

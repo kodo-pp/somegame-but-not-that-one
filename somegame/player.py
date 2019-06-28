@@ -16,8 +16,6 @@ class Player(Mob):
         self.update_rect()
         self.hit_timeout = 0.0
         self.control_disabled_for = 0.0
-        self.max_hp = 5
-        self.hp = self.max_hp
         self.weapon = Gun(game=self.game, holder=self)
 
     def update(self, time_interval):
@@ -31,7 +29,7 @@ class Player(Mob):
         # Keyboard control
         if self.is_control_enabled():
             direction = Vector2D(*self.get_direction())
-            self.momentum += direction * self.trait_acceleration
+            self.momentum += direction * self.trait_acceleration * time_interval
             self.momentum.chomp(self.trait_speed)
             self.maybe_shoot()
 
@@ -75,10 +73,11 @@ class Player(Mob):
             dir_y += 1
         return dir_x, dir_y
 
-    trait_acceleration = 300.0
+    trait_acceleration = 8000.0
     trait_collides = False
-    trait_friction = 1500.0
+    trait_friction = 1000.0
     trait_hit_confusion_time = 0.25
     trait_hit_grace = 0.4
+    trait_max_hp = 5
     trait_prevent_collisions = False
     trait_speed = 200.0

@@ -96,6 +96,9 @@ class Vector2D(object):
         """ Return a chomped copy of this vector, see chomp() """
         return self if self.length_sq() < length**2 else self.stretched(length)
 
+    def azimuth(self):
+        return math.atan2(self.y, self.x)
+
 
 class SpriteBase(pygame.sprite.Sprite):
     def __init__(self, game):
@@ -135,6 +138,7 @@ class SpriteBase(pygame.sprite.Sprite):
 
     trait_bounds_checked = True
     trait_collides = True
+    trait_is_hittable = False
 
 
 # XXX: Add a lock here when (if) multithreading will be used

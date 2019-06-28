@@ -12,7 +12,7 @@ class Mob(SpriteBase):
         self.control_disabled_for = 0.0
         self.main_texture = None
         self.hit_texture = None
-        self.max_hp = 2
+        self.max_hp = self.trait_max_hp
         self.hp = self.max_hp
     
     def update(self, time_interval):
@@ -89,6 +89,7 @@ class Mob(SpriteBase):
     trait_hit_grace = 0.2
     trait_hit_radius = 30.0
     trait_is_hittable = True
+    trait_max_hp = 2
     trait_physics_enabled = True
     trait_prevent_collisions = True
     trait_speed = 100.0

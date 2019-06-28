@@ -1,3 +1,7 @@
+import math
+
+import pygame
+
 from somegame.mob import Mob
 from somegame.util import load_texture
 from somegame.weapon import Weapon
@@ -7,14 +11,22 @@ class Bullet(Mob):
     def __init__(self, game, position, direction):
         super().__init__(game, position)
         self.direction = direction.normalized()
-        self.main_texture = load_texture('bullet/main.png')
+        self.main_texture = load_texture(self.trait_texture_filename)
+        if self.trait_should_rotate:
+            self.main_texture = pygame.transform.rotate(
+                self.main_texture,
+                direction.azimuth() * 180 / math.pi,
+            )
         self.image = self.main_texture
         self.update_rect()
+
+    def should_hit(self, sprite):
+        return sprite is not self.game.player and sprite.trait_is_hittable
 
     def ai(self, time_interval):
         self.move_by(*(self.direction * self.trait_speed * time_interval).to_tuple())
         for mob in self.game.mobs:
-            if mob is self:
+            if not self.should_hit(mob):
                 continue
             if self.collides_with(sprite=mob, radius=self.trait_attack_radius):
                 mob.hit_by(attacker=self, vector=self.direction, force=self.trait_attack_knockback, damage=1)
@@ -31,18 +43,22 @@ class Bullet(Mob):
     trait_is_hittable = False
     trait_physics_enabled = False
     trait_prevent_collisions = False
+    trait_should_rotate = False
     trait_speed = 600.0
+    trait_texture_filename = 'bullet/main.png'
 
 
 class Gun(Weapon):
-    def __init__(self, game, holder):
+    def __init__(self, game, holder, BulletClass=Bullet, cooldown_period=0.5):
         super().__init__(game, holder)
-        self.cooldown_period = 0.5
+        self.cooldown_period = cooldown_period
+        self.BulletClass = BulletClass
 
-    def shoot(self, direction):
+    def shoot(self, direction, cooldown=True):
         if self.is_on_cooldown():
             return
         position = self.holder.position
         # TODO: holder
-        self.game.add_sprite(Bullet(game=self.game, position=position, direction=direction))
-        self.start_cooldown()
+        self.game.add_sprite(self.BulletClass(game=self.game, position=position, direction=direction))
+        if cooldown:
+            self.start_cooldown()
