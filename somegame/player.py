@@ -30,7 +30,7 @@ class Player(Mob):
         if self.is_control_enabled():
             direction = Vector2D(*self.get_direction())
             self.momentum += direction * self.trait_acceleration * time_interval
-            self.momentum.chomp(self.trait_speed)
+            self.momentum.chomp(self.speed)
             self.maybe_shoot()
 
     def maybe_shoot(self):

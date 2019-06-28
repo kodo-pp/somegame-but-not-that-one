@@ -4,9 +4,14 @@ from somegame.util import SpriteBase
 
 
 class LevelTransitionOverlay(SpriteBase):
-    def __init__(self, game, image):
+    def __init__(self, game, image, powerup_image=None):
         super().__init__(game)
         self.image = image.convert(24)
+        if powerup_image is not None:
+            rect = powerup_image.get_rect()
+            rect.center = self.image.get_rect().center
+            rect.top = 0
+            self.image.blit(powerup_image, rect)
         self.time_elapsed = 0.0
         self.has_level_switched = False
 

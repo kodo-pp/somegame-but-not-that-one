@@ -4,6 +4,7 @@ import pygame
 import yaml
 from loguru import logger
 
+import somegame.powerup as powerup
 from somegame.control_exceptions import *
 from somegame.deadline import Deadline
 from somegame.fps_osd import FpsOSD
@@ -12,7 +13,7 @@ from somegame.level_transition_overlay import LevelTransitionOverlay
 from somegame.mob import Mob
 from somegame.player import Player
 from somegame.student_me import StudentME
-from somegame.util import load_texture, Vector2D
+from somegame.util import load_texture, Vector2D, probability_choose
 
 
 class LevelLoadError(RuntimeError):
@@ -23,6 +24,14 @@ entities = {
     'student_me': StudentME,
     'deadline': Deadline,
 }
+
+
+powerup_list = [
+    (powerup.HealthUp, 1.0),
+    (powerup.FireRateUp, 1.0),
+    (powerup.SpeedUp, 1.0),
+    (powerup.MaxHP, 0.3),
+]
 
 
 class Game(object):
@@ -80,7 +89,7 @@ class Game(object):
                         self.frame_counter = 0
                         self.time_counter = 0
                     if not self.is_showing_level_overlay and self.should_switch_level():
-                        self.load_level(self.get_next_level_name())
+                        self.load_level(self.get_next_level_name(), reward=self.get_random_powerup())
             except PlayerDied as e:
                 logger.info('Player died')
                 raise GameExited() from e
@@ -142,7 +151,7 @@ class Game(object):
     def should_switch_level(self):
         return len(self.enemies.sprites()) == 0
 
-    def load_level(self, level_name):
+    def load_level(self, level_name, reward=None):
         logger.info('Loading level `{}`'.format(level_name))
         self.health_osd = None
         self.sprites.empty()
@@ -175,7 +184,10 @@ class Game(object):
             self.level_transition_overlay = LevelTransitionOverlay(
                 game = self,
                 image = self.get_level_entry_overlay(level_name),
+                powerup_image = None if reward is None else reward.image,
             )
+            if reward is not None:
+                reward.apply(self.player)
             self.level_transition_overlay.update(0.0)
             self.health_osd = HealthOSD(game=self)
         except Exception as e:
@@ -214,3 +226,6 @@ class Game(object):
 
     def get_average_fps(self):
         return self.average_fps
+
+    def get_random_powerup(self):
+        return probability_choose(powerup_list)(game=self)

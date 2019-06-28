@@ -161,5 +161,13 @@ def get_random_direction():
     return Vector2D(math.sin(ang), math.cos(ang))
 
 
-def optional(x, d):
-    return d if x is None else x
+def probability_choose(tuples):
+    total = sum([prob for obj, prob in tuples])
+    p = rd.random()
+    accum = 0.0
+    for obj, raw_prob in tuples:
+        prob = raw_prob / total
+        accum += prob
+        if accum >= p:
+            return obj
+    return tuples[-1]

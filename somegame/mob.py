@@ -14,6 +14,7 @@ class Mob(SpriteBase):
         self.hit_texture = None
         self.max_hp = self.trait_max_hp
         self.hp = self.max_hp
+        self.speed = self.trait_speed
     
     def update(self, time_interval):
         self.ai(time_interval)
@@ -78,6 +79,9 @@ class Mob(SpriteBase):
         self.hp = max(0, self.hp - damage)
         if self.hp <= 0:
             self.die()
+
+    def heal(self, hp):
+        self.hp = min(self.max_hp, self.hp + hp)
 
     def is_hittable(self):
         return self.hit_timeout <= 0.0 and self.trait_is_hittable

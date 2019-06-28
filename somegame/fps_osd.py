@@ -2,7 +2,6 @@ import pygame
 from loguru import logger
 
 from somegame.osd import OSD
-from somegame.util import optional
 
 
 class FpsOSD(OSD):
