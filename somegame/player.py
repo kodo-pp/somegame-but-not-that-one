@@ -79,8 +79,8 @@ class Player(Mob):
     trait_acceleration = 8000.0
     trait_collides = False
     trait_friction = 1000.0
-    trait_hit_confusion_time = 0.25
-    trait_hit_grace = 0.4
+    trait_hit_confusion_time = 0.1
+    trait_hit_grace = 0.8
     trait_max_hp = 5
     trait_prevent_collisions = False
     trait_speed = 200.0
