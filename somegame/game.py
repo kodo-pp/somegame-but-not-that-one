@@ -51,6 +51,7 @@ class Game(object):
         'health_osd',
         'is_showing_level_overlay',
         'level_name',
+        'level_switch_timer',
         'level_transition_overlay',
         'mobs',
         'player',
@@ -73,6 +74,7 @@ class Game(object):
         self.level_name = None
         self.player = None
         self.has_player_died = False
+        self.level_switch_timer = 0.0
 
     def run(self):
         logger.info('Initializing Pygame-related objects')
@@ -162,11 +164,16 @@ class Game(object):
         self.is_showing_level_overlay = False
         self.level_transition_overlay = None
 
+    def update_level_switch_timer(self, time_interval):
+        if len(self.enemies.sprites()) == 0:
+            self.level_switch_timer += time_interval
+
     def should_switch_level(self):
-        return len(self.enemies.sprites()) == 0
+        return self.level_switch_timer >= 2.0
 
     def load_level(self, level_name, reward=None):
         logger.info('Loading level `{}`'.format(level_name))
+        self.level_switch_timer = 0.0
         self.health_osd = None
         self.sprites.empty()
         self.mobs.empty()
@@ -216,6 +223,7 @@ class Game(object):
         if self.is_showing_level_overlay:
             self.level_transition_overlay.update(time_interval)
         elif not self.has_player_died:
+            self.update_level_switch_timer(time_interval)
             self.sprites.update(time_interval)
             for i in self.sprite_removal_queue:
                 logger.debug('Removing sprite of class `{}` with hexid {}', i.__class__.__name__, hex(id(i)))
