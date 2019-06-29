@@ -47,6 +47,7 @@ class Game(object):
         'fps',
         'fps_osd',
         'frame_counter',
+        'final_overlay_image',
         'has_player_died',
         'health_osd',
         'is_showing_level_overlay',
@@ -171,6 +172,10 @@ class Game(object):
     def should_switch_level(self):
         return self.level_switch_timer >= 2.0
 
+    @staticmethod
+    def level_exists(level_name):
+        return os.path.isdir(os.path.join('assets', 'levels', level_name, 'level.yml'))
+
     def load_level(self, level_name, reward=None):
         logger.info('Loading level `{}`'.format(level_name))
         self.level_switch_timer = 0.0
@@ -182,7 +187,15 @@ class Game(object):
             self.player = Player(game=self, position=self.surface.get_rect().center)
         self.level_name = level_name
         try:
-            level = self.read_level(level_name)
+            try:
+                level = self.read_level(level_name)
+            except LevelLoadError:
+                if self.level_exists(level_name):
+                    raise
+                self.has_player_died = 'final'
+                self.final_overlay_image = load_texture('final.png', root='assets')
+                self.fps = 5
+                return
             player_position_info = level['player']['position']
             #self.player = Player(
             #    game = self,
@@ -236,8 +249,10 @@ class Game(object):
         self.surface.fill(color=(0, 0, 0))
         if self.is_showing_level_overlay:
             self.surface.blit(self.level_transition_overlay.image, (0, 0))
-        elif self.has_player_died:
+        elif self.has_player_died is True:
             self.surface.blit(self.death_overlay_image, (0, 0))
+        elif self.has_player_died == 'final':
+            self.surface.blit(self.final_overlay_image, (0, 0))
         else:
             self.sprites.draw(self.surface)
             self.fps_osd.draw(self.surface)
