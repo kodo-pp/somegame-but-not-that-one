@@ -181,3 +181,7 @@ def probability_choose(tuples):
         if accum >= p:
             return obj
     return tuples[-1]
+
+
+def random_between(low, high):
+    return rd.random() * (high - low) + low

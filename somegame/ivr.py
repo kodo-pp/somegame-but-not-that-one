@@ -11,7 +11,7 @@ class IVRBullet(Bullet):
     def should_hit(self, sprite):
         return sprite is self.game.player
 
-    trait_speed = 500.0
+    trait_speed = 400.0
 
 
 class IVR(Mob):
@@ -94,6 +94,7 @@ class IVR(Mob):
 
     trait_attack_knockback = 400.0
     trait_attack_radius = 45.0
+    trait_death_animation_enabled = True
     trait_physics_enabled = False
     trait_fire_delay = 2.0
     trait_max_hp = 50

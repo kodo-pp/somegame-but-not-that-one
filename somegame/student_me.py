@@ -27,4 +27,5 @@ class StudentME(Mob):
 
     trait_attack_knockback = 400.0
     trait_attack_radius = 20.0
+    trait_death_animation_enabled = True
     trait_speed = 100.0

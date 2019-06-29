@@ -1,5 +1,6 @@
 import abc
 
+from somegame.death_animation import DeathAnimation
 from somegame.util import SpriteBase, Vector2D
 
 
@@ -75,6 +76,12 @@ class Mob(SpriteBase):
         self.hit_timeout = self.trait_hit_grace
         return True
 
+    def die(self):
+        if self.trait_death_animation_enabled:
+            anim = DeathAnimation(game=self.game, sprite=self)
+            anim.show()
+        super().die()
+
     def inflict_damage(self, damage):
         self.hp = max(0, self.hp - damage)
         if self.hp <= 0:
@@ -88,6 +95,7 @@ class Mob(SpriteBase):
 
     trait_acceleration = 1000.0
     trait_attack_radius = 0.0
+    trait_death_animation_enabled = False
     trait_friction = 200.0
     trait_hit_confusion_time = 0.15
     trait_hit_grace = 0.2

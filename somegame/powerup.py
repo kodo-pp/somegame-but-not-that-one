@@ -22,7 +22,7 @@ class Powerup(Item):
 class HealthUp(Powerup):
     def __init__(self, game):
         super().__init__(game)
-        self.value = rd.choice([1, 1, 2, 2, 3])
+        self.value = rd.choice([1, 2, 2, 3])
 
     def apply(self, player):
         logger.debug('HealthUp({})', self.value)
@@ -45,7 +45,7 @@ class MaxHP(Powerup):
 class FireRateUp(Powerup):
     def __init__(self, game):
         super().__init__(game)
-        self.value = rd.choice([0.7, 0.8, 0.8, 0.85, 0.9, 0.9, 0.95, 0.95])
+        self.value = rd.choice([0.6, 0.7, 0.8, 0.8])
 
     def apply(self, player):
         logger.debug('FireRateUp({})', self.value)
@@ -57,7 +57,7 @@ class FireRateUp(Powerup):
 class SpeedUp(Powerup):
     def __init__(self, game):
         super().__init__(game)
-        self.value = rd.choice([50, 50, 100, 100, 100, 200])
+        self.value = rd.choice([50, 100, 100, 100, 200])
 
     def apply(self, player):
         logger.debug('SpeedUp({})', self.value)

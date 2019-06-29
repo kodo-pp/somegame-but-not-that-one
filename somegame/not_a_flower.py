@@ -29,6 +29,7 @@ class NotAFlower(Mob):
 
     trait_attack_knockback = 400.0
     trait_attack_radius = 20.0
+    trait_death_animation_enabled = True
     trait_max_hp = 10
     trait_physics_enabled = False
     trait_speed = 250.0
