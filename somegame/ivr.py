@@ -97,5 +97,5 @@ class IVR(Mob):
     trait_death_animation_enabled = True
     trait_physics_enabled = False
     trait_fire_delay = 2.0
-    trait_max_hp = 5
+    trait_max_hp = 50
     trait_speed = 0.0
